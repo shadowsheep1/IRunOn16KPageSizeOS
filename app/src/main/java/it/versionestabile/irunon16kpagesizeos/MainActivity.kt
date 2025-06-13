@@ -2,7 +2,7 @@ package it.versionestabile.irunon16kpagesizeos
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.TextView
+import androidx.core.content.ContextCompat
 import it.versionestabile.irunon16kpagesizeos.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -17,13 +17,15 @@ class MainActivity : AppCompatActivity() {
 
         val pageSize = getPageSize()
 
-        binding.sampleText.text =
-            buildString {
-                append("Page size: ")
-                append(pageSize)
-                append(" bytes\n")
-                append(if (pageSize == 16384) "16 KB pages detected" else "NOT 16 KB pages")
-            }
+        if (pageSize == 16384) {
+            binding.statusTitleText.text = getString(R.string.is_16k_page_os)
+            binding.statusIcon.setImageResource(R.drawable.ic_check_circle)
+            binding.statusIcon.setColorFilter(ContextCompat.getColor(this, R.color.status_ok_green))
+        } else {
+            binding.statusTitleText.text = getString(R.string.not_16k_page_os, pageSize / 1024)
+            binding.statusIcon.setImageResource(R.drawable.ic_info_circle)
+            binding.statusIcon.setColorFilter(ContextCompat.getColor(this, R.color.status_info_blue))
+        }
     }
 
     /**

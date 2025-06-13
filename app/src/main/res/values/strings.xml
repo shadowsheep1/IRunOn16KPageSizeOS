@@ -1,3 +1,11 @@
 <resources>
-    <string name="app_name">IRunOn16KPageSizeOS</string>
+    <string name="app_name">Page Size Checker</string> <!-- Cambia il nome dell'app se vuoi -->
+    <string name="page_size_label">Page size detected:</string>
+    <string name="page_size_bytes_format">%d bytes</string>
+    <string name="page_size_kb_format">%d KB pages</string>
+    <string name="is_16k_page_os">16 KB page size OS</string>
+    <string name="not_16k_page_os">OS with %dKB page size</string>
+    <string name="status_icon_content_description">Status icon</string>
 </resources>
+
+    
