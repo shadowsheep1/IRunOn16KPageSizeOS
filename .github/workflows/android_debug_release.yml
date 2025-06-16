@@ -1,0 +1,72 @@
+name: Build Debug APK and Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version(ex. v0.1.0-debug)'
+        required: true
+        default: 'v0.1.0-debug'
+
+jobs:
+  build_and_release_debug_apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          # compile-sdk-version: 35 # Taken from build.gradle
+          # build-tools-version: "35.0.0" # Taken from build.gradle
+          ndk-version: '27.2.12479018'
+          # cmake-version: '3.22.1' # Taken from build.gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build Debug APK with Gradle
+        uses: gradle/gradle-build-action@v3
+        with:
+          arguments: assembleDebug
+          # gradle-version: wrapper # Use project wrapper (default)
+
+      - name: Define APK path and name
+        id: apk_details
+        run: |
+          APK_NAME="app-debug-${{ github.event.inputs.version }}.apk"
+          ORIGINAL_APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          RENAMED_APK_PATH="app/build/outputs/apk/debug/${APK_NAME}"
+          mv "${ORIGINAL_APK_PATH}" "${RENAMED_APK_PATH}"
+          echo "apk_path=${RENAMED_APK_PATH}" >> $GITHUB_OUTPUT
+          echo "apk_filename=${APK_NAME}" >> $GITHUB_OUTPUT
+          echo "Original APK found at: ${ORIGINAL_APK_PATH}"
+          echo "Renamed APK to: ${RENAMED_APK_PATH}"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.event.inputs.version }}
+        run: |
+          gh release create "$TAG_NAME" \
+            --title "Debug Release $TAG_NAME" \
+            --notes "Automated debug build for version $TAG_NAME." \
+            --prerelease # Opzional: tag the release as pre-release
+
+      - name: Upload APK to Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.event.inputs.version }}
+        run: |
+          echo "Uploading ${{ steps.apk_details.outputs.apk_path }} with filename ${{ steps.apk_details.outputs.apk_filename }}"
+          gh release upload "$TAG_NAME" "${{ steps.apk_details.outputs.apk_path }}" --clobber          
